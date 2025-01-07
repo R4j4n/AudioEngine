@@ -176,11 +176,20 @@ class AudioScheduler:
             else:
                 print("No media playing - proceeding with scheduled audio...")
 
-            # Play the scheduled audio
-            print(f"Playing scheduled audio: {audio_file}")
+            # # Play the scheduled audio
+            # print(f"Playing scheduled audio: {audio_file}")
+            # pygame.mixer.music.load(audio_file)
+            # pygame.mixer.music.play()
+
+            # Play the scheduled audio twice
             pygame.mixer.music.load(audio_file)
             pygame.mixer.music.play()
+            # Wait for the audio to finish
+            while pygame.mixer.music.get_busy():
+                time.sleep(0.1)
 
+            pygame.mixer.music.load(audio_file)
+            pygame.mixer.music.play()
             # Wait for the audio to finish
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
