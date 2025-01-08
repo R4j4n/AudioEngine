@@ -53,10 +53,10 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         # "21:30": "",
         # closing
-        "19:45": "AudioFiles/closing_10.mp3",
+        "19:46": "AudioFiles/closing_10.mp3",
         "19:55": "AudioFiles/closed.mp3",
     },
     "monday": {
@@ -113,10 +113,10 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         # "21:30": "",
         # closing
-        "19:45": "AudioFiles/closing_10.mp3",
+        "19:46": "AudioFiles/closing_10.mp3",
         "19:55": "AudioFiles/closed.mp3",
     },
     # Add other days as needed
@@ -174,10 +174,10 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         # "21:30": "",
         # closing
-        "19:45": "AudioFiles/closing_10.mp3",
+        "19:46": "AudioFiles/closing_10.mp3",
         "19:55": "AudioFiles/closed.mp3",
     },
     "wednesday": {
@@ -234,10 +234,10 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         # "21:30": "",
         # closing
-        "19:45": "AudioFiles/closing_10.mp3",
+        "19:46": "AudioFiles/closing_10.mp3",
         "19:55": "AudioFiles/closed.mp3",
     },
     "thursday": {
@@ -294,10 +294,10 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         # "21:30": "",
         # closing
-        "19:45": "AudioFiles/closing_10.mp3",
+        "19:46": "AudioFiles/closing_10.mp3",
         "19:55": "AudioFiles/closed.mp3",
     },
     "friday": {
@@ -355,7 +355,7 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         "21:30": "AudioFiles/wristband/red.mp3",
         # glow in the dark
         "17:45": "AudioFiles/glow_15.mp3",
@@ -419,7 +419,7 @@ mapp = {
         "12:30": "AudioFiles/wristband/red.mp3",
         "14:45": "AudioFiles/wristband/red.mp3",
         "17:00": "AudioFiles/wristband/red.mp3",
-        "19:45": "AudioFiles/wristband/red.mp3",
+        "19:15": "AudioFiles/wristband/red.mp3",
         "21:30": "AudioFiles/wristband/red.mp3",
         # glow in the dark
         "17:45": "AudioFiles/glow_15.mp3",
