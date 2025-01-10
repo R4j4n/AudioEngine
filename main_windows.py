@@ -1,3 +1,5 @@
+import asyncio
+import logging
 import subprocess
 import time
 from datetime import datetime
@@ -5,24 +7,24 @@ from datetime import time as dtime
 
 import pygame
 import schedule
-import win32gui
-import win32con
 import win32api
+import win32con
+import win32gui
 import winsdk.windows.media.control as wmc
-import asyncio
-import logging
-from mapping import mapp
+
+from mapping_london import mapp
+
 
 class AudioScheduler:
     def __init__(self):
         # Initialize pygame mixer for audio playback
         pygame.mixer.init()
-        
+
         # Dictionary to store schedule times and corresponding audio files by day
         self.schedule_dict = mapp
         # Validate time format
         self.validate_times()
-        
+
         # Initialize logging
         logging.basicConfig(level=logging.INFO)
         self.logger = logging.getLogger(__name__)
@@ -45,7 +47,9 @@ class AudioScheduler:
     async def get_media_session(self):
         """Get the current media session"""
         try:
-            sessions = await wmc.GlobalSystemMediaTransportControlsSessionManager.request_async()
+            sessions = (
+                await wmc.GlobalSystemMediaTransportControlsSessionManager.request_async()
+            )
             current_session = sessions.get_current_session()
             return current_session
         except Exception as e:
@@ -55,14 +59,14 @@ class AudioScheduler:
     def get_chrome_windows(self):
         """Get all Chrome window handles"""
         chrome_windows = []
-        
+
         def callback(hwnd, windows):
             if win32gui.IsWindowVisible(hwnd):
                 class_name = win32gui.GetClassName(hwnd)
                 if "Chrome" in class_name:
                     windows.append(hwnd)
             return True
-        
+
         win32gui.EnumWindows(callback, chrome_windows)
         return chrome_windows
 
@@ -73,7 +77,10 @@ class AudioScheduler:
             if session:
                 info = await session.try_get_media_properties_async()
                 playback_info = session.get_playback_info()
-                return playback_info.playback_status == wmc.GlobalSystemMediaTransportControlsSessionPlaybackStatus.PLAYING
+                return (
+                    playback_info.playback_status
+                    == wmc.GlobalSystemMediaTransportControlsSessionPlaybackStatus.PLAYING
+                )
             return False
         except Exception as e:
             self.logger.error(f"Error checking media status: {e}")
@@ -86,15 +93,17 @@ class AudioScheduler:
             if session:
                 await session.try_pause_async()
                 return True
-            
+
             # Fallback: Try sending media keys to Chrome windows
             chrome_windows = self.get_chrome_windows()
             for hwnd in chrome_windows:
                 win32gui.SetForegroundWindow(hwnd)
                 win32api.keybd_event(win32con.VK_MEDIA_PLAY_PAUSE, 0, 0, 0)
-                win32api.keybd_event(win32con.VK_MEDIA_PLAY_PAUSE, 0, win32con.KEYEVENTF_KEYUP, 0)
+                win32api.keybd_event(
+                    win32con.VK_MEDIA_PLAY_PAUSE, 0, win32con.KEYEVENTF_KEYUP, 0
+                )
                 time.sleep(0.2)
-            
+
             return bool(chrome_windows)
         except Exception as e:
             self.logger.error(f"Error pausing media: {e}")
@@ -107,15 +116,17 @@ class AudioScheduler:
             if session:
                 await session.try_play_async()
                 return True
-            
+
             # Fallback: Try sending media keys to Chrome windows
             chrome_windows = self.get_chrome_windows()
             for hwnd in chrome_windows:
                 win32gui.SetForegroundWindow(hwnd)
                 win32api.keybd_event(win32con.VK_MEDIA_PLAY_PAUSE, 0, 0, 0)
-                win32api.keybd_event(win32con.VK_MEDIA_PLAY_PAUSE, 0, win32con.KEYEVENTF_KEYUP, 0)
+                win32api.keybd_event(
+                    win32con.VK_MEDIA_PLAY_PAUSE, 0, win32con.KEYEVENTF_KEYUP, 0
+                )
                 time.sleep(0.2)
-            
+
             return bool(chrome_windows)
         except Exception as e:
             self.logger.error(f"Error playing media: {e}")
@@ -137,9 +148,13 @@ class AudioScheduler:
                     self.logger.info("Successfully paused media")
                     time.sleep(1)
                 else:
-                    self.logger.warning("Could not pause media. Continuing with audio playback...")
+                    self.logger.warning(
+                        "Could not pause media. Continuing with audio playback..."
+                    )
             else:
-                self.logger.info("No media playing - proceeding with scheduled audio...")
+                self.logger.info(
+                    "No media playing - proceeding with scheduled audio..."
+                )
 
             # Play the scheduled audio twice
             pygame.mixer.music.load(audio_file)
@@ -195,6 +210,7 @@ class AudioScheduler:
         """Convert 24-hour time to 12-hour format for display"""
         hour, minute = map(int, time_24hr.split(":"))
         return datetime.strptime(f"{hour}:{minute}", "%H:%M").strftime("%I:%M %p")
+
 
 if __name__ == "__main__":
     scheduler = AudioScheduler()
