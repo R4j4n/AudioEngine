@@ -154,7 +154,7 @@ class AudioScheduler:
 
         return success
 
-    def play_scheduled_audio(self, audio_file):
+    def play_scheduled_audio(self, audio_file, day):
         """Play the scheduled audio file"""
         try:
             current_time = datetime.now().strftime("%H:%M")
@@ -176,17 +176,14 @@ class AudioScheduler:
             else:
                 print("No media playing - proceeding with scheduled audio...")
 
-            # # Play the scheduled audio
-            # print(f"Playing scheduled audio: {audio_file}")
-            # pygame.mixer.music.load(audio_file)
-            # pygame.mixer.music.play()
-
-            # Play the scheduled audio twice
-            pygame.mixer.music.load(audio_file)
-            pygame.mixer.music.play()
-            # Wait for the audio to finish
-            while pygame.mixer.music.get_busy():
-                time.sleep(0.1)
+            if day in ["saturday", "friday", "sunday"]:
+                print(f"Its weekend, doing the announcement twice...")
+                # Play the scheduled audio twice
+                pygame.mixer.music.load(audio_file)
+                pygame.mixer.music.play()
+                # Wait for the audio to finish
+                while pygame.mixer.music.get_busy():
+                    time.sleep(0.1)
 
             pygame.mixer.music.load(audio_file)
             pygame.mixer.music.play()
@@ -213,7 +210,7 @@ class AudioScheduler:
             for time_str, audio_file in times.items():
                 if day.lower() == datetime.now().strftime("%A").lower():
                     schedule.every().day.at(time_str).do(
-                        self.play_scheduled_audio, audio_file
+                        self.play_scheduled_audio, audio_file, day
                     )
                     print(
                         f"Scheduled audio {audio_file} for {day.capitalize()} at {time_str}"
