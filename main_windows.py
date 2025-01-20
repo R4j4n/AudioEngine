@@ -4,6 +4,7 @@ import subprocess
 import time
 from datetime import datetime
 from datetime import time as dtime
+from functools import partial
 
 import pygame
 import schedule
@@ -156,6 +157,8 @@ class AudioScheduler:
                     "No media playing - proceeding with scheduled audio..."
                 )
 
+            pygame.mixer.music.set_volume(0.65)
+                    
             # Play the scheduled audio twice
             pygame.mixer.music.load(audio_file)
             pygame.mixer.music.play()
@@ -180,13 +183,14 @@ class AudioScheduler:
         except Exception as e:
             self.logger.error(f"Error during audio playback: {e}")
 
+
     def schedule_all_tasks(self):
         """Schedule all tasks from the dictionary"""
         for day, times in self.schedule_dict.items():
-            for time_str, audio_file in times.items():
-                if day.lower() == datetime.now().strftime("%A").lower():
+            if day.lower() == datetime.now().strftime("%A").lower():
+                for time_str, audio_file in times.items():
                     schedule.every().day.at(time_str).do(
-                        lambda: asyncio.run(self.play_scheduled_audio(audio_file))
+                        partial(asyncio.run, self.play_scheduled_audio(audio_file))
                     )
                     self.logger.info(
                         f"Scheduled audio {audio_file} for {day.capitalize()} at {time_str}"
@@ -203,9 +207,12 @@ class AudioScheduler:
                 print(f"  - {time_str} ({self.convert_to_12hr(time_str)})")
 
         while True:
-            schedule.run_pending()
-            time.sleep(1)
-
+            try:
+                schedule.run_pending()
+                time.sleep(1)
+            except Exception as e:
+                self.logger.error(f"Error in scheduler loop: {e}")
+            
     def convert_to_12hr(self, time_24hr):
         """Convert 24-hour time to 12-hour format for display"""
         hour, minute = map(int, time_24hr.split(":"))
