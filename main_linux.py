@@ -176,14 +176,14 @@ class AudioScheduler:
             else:
                 print("No media playing - proceeding with scheduled audio...")
 
-            if day in ["saturday", "friday", "sunday"]:
-                print(f"Its weekend, doing the announcement twice...")
-                # Play the scheduled audio twice
-                pygame.mixer.music.load(audio_file)
-                pygame.mixer.music.play()
-                # Wait for the audio to finish
-                while pygame.mixer.music.get_busy():
-                    time.sleep(0.1)
+            # if day in ["saturday", "friday", "sunday"]:
+            #     print(f"Its weekend, doing the announcement twice...")
+            #     # Play the scheduled audio twice
+            #     pygame.mixer.music.load(audio_file)
+            #     pygame.mixer.music.play()
+            #     # Wait for the audio to finish
+            #     while pygame.mixer.music.get_busy():
+            #         time.sleep(0.1)
 
             pygame.mixer.music.load(audio_file)
             pygame.mixer.music.play()
