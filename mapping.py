@@ -169,7 +169,7 @@ mapp = {
         "19:58": "AudioFiles/closed.mp3",
     },
     "thursday": {
-        "10:30": "AudioFiles/wristband/pink.mp3",
+        "00:01": "AudioFiles/wristband/pink.mp3",
         "10:45": "AudioFiles/wristband/yellow.mp3",
         "11:00": "AudioFiles/wristband/orange.mp3",
         "11:15": "AudioFiles/wristband/green.mp3",
