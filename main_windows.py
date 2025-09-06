@@ -158,13 +158,8 @@ class AudioScheduler:
                 )
 
             pygame.mixer.music.set_volume(0.65)
-                    
-            # Play the scheduled audio twice
-            pygame.mixer.music.load(audio_file)
-            pygame.mixer.music.play()
-            while pygame.mixer.music.get_busy():
-                time.sleep(0.1)
 
+            # Play the scheduled audio twice
             pygame.mixer.music.load(audio_file)
             pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
@@ -182,7 +177,6 @@ class AudioScheduler:
 
         except Exception as e:
             self.logger.error(f"Error during audio playback: {e}")
-
 
     def schedule_all_tasks(self):
         """Schedule all tasks from the dictionary"""
@@ -212,7 +206,7 @@ class AudioScheduler:
                 time.sleep(1)
             except Exception as e:
                 self.logger.error(f"Error in scheduler loop: {e}")
-            
+
     def convert_to_12hr(self, time_24hr):
         """Convert 24-hour time to 12-hour format for display"""
         hour, minute = map(int, time_24hr.split(":"))
