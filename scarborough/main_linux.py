@@ -313,40 +313,82 @@ SCHEDULE = {
 
 class AudioScheduler:
     def __init__(self):
+        print("=" * 60)
+        print("SCARBOROUGH AUDIO SCHEDULER - INITIALIZATION")
+        print("=" * 60)
+
         # Get the directory where this script is located
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        print(f"Script directory: {self.script_dir}")
 
-        pygame.mixer.init()
+        print("\nInitializing pygame mixer...")
+        try:
+            pygame.mixer.init()
+            print("✓ Pygame mixer initialized successfully")
+        except Exception as e:
+            print(f"✗ Failed to initialize pygame mixer: {e}")
+            raise
+
         self.schedule_dict = SCHEDULE
         self.valid_days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+
+        print("\nValidating schedule and audio files...")
         self.validate_schedule()
+
+        print("\nChecking system dependencies...")
         self.check_dependencies()
+
+        print("\n✓ Initialization complete")
+        print("=" * 60)
 
     def check_dependencies(self):
         """Check if required system tools are installed"""
+        print("Checking for playerctl...")
         try:
-            subprocess.run(["which", "playerctl"], check=True, capture_output=True, timeout=2)
-        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            result = subprocess.run(["which", "playerctl"], check=True, capture_output=True, timeout=2)
+            playerctl_path = result.stdout.decode().strip()
+            print(f"✓ playerctl found: {playerctl_path}")
+        except subprocess.CalledProcessError:
+            print("✗ playerctl not found")
             raise SystemError("playerctl not installed. Install with: sudo apt-get install playerctl")
+        except subprocess.TimeoutExpired:
+            print("✗ playerctl check timed out")
+            raise SystemError("Failed to check for playerctl")
 
     def validate_schedule(self):
         """Validate schedule configuration"""
+        total_files = 0
+        days_validated = 0
+
         for day in self.schedule_dict.keys():
             if day.lower() not in self.valid_days:
+                print(f"✗ Invalid day: {day}")
                 raise ValueError(f"Invalid day: {day}")
 
+            time_slots = 0
             for time_str, audio_file in self.schedule_dict[day].items():
                 try:
                     hour, minute = map(int, time_str.split(":"))
                     if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                        print(f"✗ Invalid time: {time_str}")
                         raise ValueError(f"Invalid time: {time_str}")
                 except ValueError:
+                    print(f"✗ Invalid time format for {day}: {time_str}")
                     raise ValueError(f"Invalid time format for {day}: {time_str}. Use HH:MM")
 
                 # Convert relative path to absolute path
                 audio_path = os.path.join(self.script_dir, audio_file)
                 if not os.path.exists(audio_path):
+                    print(f"✗ Audio file not found: {audio_path}")
                     raise FileNotFoundError(f"Audio file not found: {audio_path}")
+
+                time_slots += 1
+                total_files += 1
+
+            days_validated += 1
+            print(f"✓ {day.capitalize()}: {time_slots} time slots validated")
+
+        print(f"\n✓ Validated {days_validated} days with {total_files} total scheduled audio files")
 
     def check_media_playing(self):
         """Check if media is currently playing"""
@@ -387,65 +429,125 @@ class AudioScheduler:
 
     def play_scheduled_audio(self, audio_file: str):
         """Play scheduled announcement, pausing and resuming media if needed"""
+        current_time = datetime.now().strftime("%H:%M:%S")
+        print(f"\n{'='*60}")
+        print(f"[{current_time}] SCHEDULED ANNOUNCEMENT TRIGGERED")
+        print(f"{'='*60}")
+
         media_was_playing = False
 
         try:
             # Convert relative path to absolute path
             audio_path = os.path.join(self.script_dir, audio_file)
+            filename = os.path.basename(audio_file)
+
+            print(f"Audio file: {filename}")
+            print(f"Full path: {audio_path}")
 
             if not os.path.exists(audio_path):
-                print(f"Error: Audio file not found: {audio_path}")
+                print(f"✗ Error: Audio file not found: {audio_path}")
                 return
 
+            # Check if media is playing
+            print("\nChecking media playback status...")
             media_was_playing = self.check_media_playing()
 
             if media_was_playing:
-                if not self.pause_media():
-                    print("Warning: Failed to pause media")
+                print("✓ Media is playing - attempting to pause...")
+                if self.pause_media():
+                    print("✓ Media paused successfully")
+                else:
+                    print("⚠ Warning: Failed to pause media, continuing anyway...")
                 time.sleep(0.5)
+            else:
+                print("• No media currently playing")
 
+            # Play announcement
+            print(f"\n▶ Playing announcement: {filename}")
             pygame.mixer.music.load(audio_path)
             pygame.mixer.music.play()
 
+            # Wait for playback to complete
             while pygame.mixer.music.get_busy():
                 time.sleep(0.1)
 
             pygame.mixer.music.unload()
+            print("✓ Announcement playback completed")
 
         except Exception as e:
-            print(f"Error playing audio: {e}")
+            print(f"✗ Error during playback: {e}")
+            import traceback
+            traceback.print_exc()
         finally:
+            # Resume media if it was playing
             if media_was_playing:
+                print("\nAttempting to resume media...")
                 time.sleep(0.3)
-                if not self.play_media():
-                    print("Warning: Failed to resume media")
+                if self.play_media():
+                    print("✓ Media resumed successfully")
+                else:
+                    print("⚠ Warning: Failed to resume media")
+
+            print(f"{'='*60}\n")
 
     def schedule_all_tasks(self):
         """Schedule all tasks for the current day"""
         current_day = datetime.now().strftime("%A").lower()
 
+        print(f"\n{'='*60}")
+        print(f"LOADING SCHEDULE FOR {current_day.upper()}")
+        print(f"{'='*60}")
+
         if current_day not in self.schedule_dict:
-            print(f"No schedule for {current_day.capitalize()}")
+            print(f"✗ No schedule found for {current_day.capitalize()}")
             return
 
         schedule.clear()
 
+        scheduled_times = []
         for time_str, audio_file in self.schedule_dict[current_day].items():
             schedule.every().day.at(time_str).do(self.play_scheduled_audio, audio_file)
+            scheduled_times.append((time_str, os.path.basename(audio_file)))
 
-        print(f"Loaded {len(self.schedule_dict[current_day])} scheduled items for {current_day.capitalize()}")
+        # Sort and display upcoming schedules
+        scheduled_times.sort()
+        print(f"✓ Loaded {len(scheduled_times)} scheduled announcements\n")
+
+        # Show next 5 upcoming schedules
+        current_time = datetime.now().strftime("%H:%M")
+        upcoming = [t for t in scheduled_times if t[0] >= current_time]
+
+        if upcoming:
+            print("Next upcoming announcements:")
+            for i, (time_str, filename) in enumerate(upcoming[:5], 1):
+                print(f"  {i}. {time_str} - {filename}")
+            if len(upcoming) > 5:
+                print(f"  ... and {len(upcoming) - 5} more")
+        else:
+            print("No more announcements scheduled for today")
+
+        print(f"{'='*60}\n")
 
     def run(self):
         """Run the scheduler"""
-        print("Scarborough Audio Scheduler Started")
+        print("\n" + "=" * 60)
+        print("SCARBOROUGH AUDIO SCHEDULER - STARTING")
+        print("=" * 60)
 
         current_day = datetime.now().strftime("%A").lower()
-        print(f"Current day: {current_day.capitalize()}")
-        print(f"Current time: {datetime.now().strftime('%H:%M:%S')}\n")
+        current_time = datetime.now().strftime("%H:%M:%S")
+
+        print(f"\nCurrent day: {current_day.capitalize()}")
+        print(f"Current time: {current_time}")
+        print(f"System time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S %Z')}")
 
         self.schedule_all_tasks()
 
         last_day = current_day
+        loop_count = 0
+
+        print("✓ Scheduler is running - Press Ctrl+C to stop\n")
+        print("Waiting for scheduled times...\n")
 
         try:
             while True:
@@ -454,20 +556,56 @@ class AudioScheduler:
                 now = datetime.now()
                 new_day = now.strftime("%A").lower()
 
+                # Check for day change
                 if new_day != last_day:
-                    print(f"\nDay changed to {new_day.capitalize()}")
+                    print(f"\n{'='*60}")
+                    print(f"DAY CHANGED: {last_day.capitalize()} → {new_day.capitalize()}")
+                    print(f"Time: {now.strftime('%Y-%m-%d %H:%M:%S')}")
+                    print(f"{'='*60}")
                     self.schedule_all_tasks()
                     last_day = new_day
+
+                # Print heartbeat every 60 seconds to show it's alive
+                loop_count += 1
+                if loop_count % 60 == 0:
+                    current_time = now.strftime("%H:%M:%S")
+                    pending_count = len(schedule.jobs)
+                    print(f"[{current_time}] Scheduler active - {pending_count} jobs scheduled")
 
                 time.sleep(1)
 
         except KeyboardInterrupt:
-            print("\nScheduler stopped")
+            print("\n" + "=" * 60)
+            print("SCHEDULER STOPPED BY USER")
+            print("=" * 60)
+            pygame.mixer.quit()
+            print("✓ Cleanup completed")
         except Exception as e:
-            print(f"Error: {e}")
+            print("\n" + "=" * 60)
+            print(f"CRITICAL ERROR: {e}")
+            print("=" * 60)
+            import traceback
+            traceback.print_exc()
+            print("\nAttempting to restart in 5 seconds...")
             time.sleep(5)
+            print("Restarting scheduler...")
+            self.run()  # Attempt to restart
 
 
 if __name__ == "__main__":
-    scheduler = AudioScheduler()
-    scheduler.run()
+    try:
+        scheduler = AudioScheduler()
+        scheduler.run()
+    except Exception as e:
+        print("\n" + "=" * 60)
+        print("FATAL ERROR DURING INITIALIZATION")
+        print("=" * 60)
+        print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
+        print("\nPlease check:")
+        print("  1. All audio files exist in the audio/ folder")
+        print("  2. playerctl is installed (sudo apt-get install playerctl)")
+        print("  3. pygame is installed (pip install pygame)")
+        print("  4. schedule is installed (pip install schedule)")
+        print("=" * 60)
