@@ -313,7 +313,7 @@ SCHEDULE = {
 class AudioScheduler:
     def __init__(self):
         print("=" * 60)
-        print("SCARBOROUGH AUDIO SCHEDULER - INITIALIZATION")
+        print("SCARBOROUGH AUDIO SCHEDULER - INITIALIZATION (macOS)")
         print("=" * 60)
 
         # Get the directory where this script is located
@@ -349,22 +349,22 @@ class AudioScheduler:
         print("=" * 60)
 
     def check_dependencies(self):
-        """Check if required system tools are installed"""
-        print("Checking for playerctl...")
+        """Check if required system tools are available (macOS uses AppleScript)"""
+        print("Checking for osascript (AppleScript)...")
         try:
             result = subprocess.run(
-                ["which", "playerctl"], check=True, capture_output=True, timeout=2
+                ["which", "osascript"], check=True, capture_output=True, timeout=2
             )
-            playerctl_path = result.stdout.decode().strip()
-            print(f"✓ playerctl found: {playerctl_path}")
+            osascript_path = result.stdout.decode().strip()
+            print(f"✓ osascript found: {osascript_path}")
         except subprocess.CalledProcessError:
-            print("✗ playerctl not found")
+            print("✗ osascript not found")
             raise SystemError(
-                "playerctl not installed. Install with: sudo apt-get install playerctl"
+                "osascript not available. This should be available on all macOS systems."
             )
         except subprocess.TimeoutExpired:
-            print("✗ playerctl check timed out")
-            raise SystemError("Failed to check for playerctl")
+            print("✗ osascript check timed out")
+            raise SystemError("Failed to check for osascript")
 
     def validate_schedule(self):
         """Validate schedule configuration"""
@@ -406,30 +406,102 @@ class AudioScheduler:
         )
 
     def check_media_playing(self):
-        """Check if media is currently playing"""
+        """Check if media is currently playing using AppleScript"""
         try:
+            # Check common macOS media players
+            script = """
+            tell application "System Events"
+                set musicPlaying to false
+                set spotifyPlaying to false
+
+                -- Check Music app
+                if exists process "Music" then
+                    tell application "Music"
+                        if player state is playing then
+                            set musicPlaying to true
+                        end if
+                    end tell
+                end if
+
+                -- Check Spotify
+                if exists process "Spotify" then
+                    tell application "Spotify"
+                        if player state is playing then
+                            set spotifyPlaying to true
+                        end if
+                    end tell
+                end if
+
+                return musicPlaying or spotifyPlaying
+            end tell
+            """
+
             result = subprocess.run(
-                ["playerctl", "status"], capture_output=True, text=True, timeout=1
+                ["osascript", "-e", script], capture_output=True, text=True, timeout=2
             )
-            return result.returncode == 0 and result.stdout.strip().lower() == "playing"
+            return result.returncode == 0 and result.stdout.strip().lower() == "true"
         except (subprocess.TimeoutExpired, Exception):
             return False
 
     def pause_media(self):
-        """Pause currently playing media"""
+        """Pause currently playing media using AppleScript"""
         try:
+            script = """
+            tell application "System Events"
+                -- Pause Music app
+                if exists process "Music" then
+                    tell application "Music"
+                        if player state is playing then
+                            pause
+                        end if
+                    end tell
+                end if
+
+                -- Pause Spotify
+                if exists process "Spotify" then
+                    tell application "Spotify"
+                        if player state is playing then
+                            pause
+                        end if
+                    end tell
+                end if
+            end tell
+            """
+
             result = subprocess.run(
-                ["playerctl", "pause"], capture_output=True, timeout=2
+                ["osascript", "-e", script], capture_output=True, timeout=2
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, Exception):
             return False
 
     def play_media(self):
-        """Resume paused media"""
+        """Resume paused media using AppleScript"""
         try:
+            script = """
+            tell application "System Events"
+                -- Resume Music app
+                if exists process "Music" then
+                    tell application "Music"
+                        if player state is paused then
+                            play
+                        end if
+                    end tell
+                end if
+
+                -- Resume Spotify
+                if exists process "Spotify" then
+                    tell application "Spotify"
+                        if player state is paused then
+                            play
+                        end if
+                    end tell
+                end if
+            end tell
+            """
+
             result = subprocess.run(
-                ["playerctl", "play"], capture_output=True, timeout=2
+                ["osascript", "-e", script], capture_output=True, timeout=2
             )
             return result.returncode == 0
         except (subprocess.TimeoutExpired, Exception):
@@ -620,7 +692,6 @@ if __name__ == "__main__":
         traceback.print_exc()
         print("\nPlease check:")
         print("  1. All audio files exist in the audio/ folder")
-        print("  2. playerctl is installed (sudo apt-get install playerctl)")
-        print("  3. pygame is installed (pip install pygame)")
-        print("  4. schedule is installed (pip install schedule)")
+        print("  2. pygame is installed (pip install pygame)")
+        print("  3. schedule is installed (pip install schedule)")
         print("=" * 60)
